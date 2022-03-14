@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %} {% trans 'Pendulum' %} {% endblock %}
+{% block title %} {% trans 'Monte Carlo' %} {% endblock %}
 
 {% block head %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.6.4/components/range.min.css">
@@ -22,36 +22,36 @@
     <div class="ui bottom attached tab segment"  data-tab="configuration">
         <div class="ui two column stackable center aligned grid ">
             <div class="column">
-                <h2>{% trans 'Initial Displacement'%}</h2>
+                <h2>{% trans 'Radius [ua]:'%}</h2>
                 <div class="ui segment">
                     {% if final_result.id == None %}
                         <div class="ui range" id="range1"></div>
                         <br></br>
                         <div class="ui input">
-                            <input type="text" id="DeltaX">
+                            <input type="text" id="R">
                         </div>
                     {% else %}
                         <div class="ui disabled range" id="range1"></div>
                         <br></br>
                         <div class="ui input">
-                            <input type="text" id="DeltaX" disabled>
+                            <input type="text" id="R" disabled>
                         </div>
   
                     {% endif %}
                 </div> 
-                <h2>{% trans 'Number of Samples N'%}</h2>
+                <h2>{% trans 'Number of samples:'%}</h2>
                 <div class="ui segment">
                     {% if final_result.id == None %}
                         <div class="ui labeled range" id="range2"></div>
                         <br></br>
                         <div class="ui input">
-                            <input type="text" id="Samples">
+                            <input type="text" id="Iteration">
                         </div>
                     {% else %}
                         <div class="ui disabled labeled range" id="range2"></div>
                         <br></br>
                         <div class="ui input">
-                            <input type="text" id="Samples" disabled>
+                            <input type="text" id="Iteration" disabled>
                         </div>
                     {% endif %}    
                 </div>   
@@ -86,20 +86,20 @@
                 </div>
                 <div class="ui vertical divider"></div>
                 <div class="column">
-                    <h2>{% trans 'Video stream '%}</h2>
-                    <div id="stream"></div>
+                    <div style="margin-left: 20px;">
+                        <div>
+                            <label id="point_in">Points in : </label>
+                        </div> </br>
+                        <div>
+                            <label id="total_point">Total points : </label>
+                        </div> </br>
+                        <div>
+                            <label id="pi">Pi : </label>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="ui two column stackable center aligned grid segment">
-                <div class="column">
-                    <div style="width: 550px; height: 500px" id="myplot1"></div>
-                </div>
-                <div class="ui vertical divider"></div>
-                <div class="column">
-                    <div style="width: 550px; height: 500px" id="myplot2"></div>
-                </div>
-            </div>
-        <table id="table_result_total" class="ui celled padded table"  cellspacing="0"  style="width:100%">
+        {% comment %} <table id="table_result_total" class="ui celled padded table"  cellspacing="0"  style="width:100%">
             <thead>
                 <tr>
                     <th>{% trans "Sample Number" %}</th>
@@ -111,7 +111,8 @@
             </thead>
             <tbody id="table_result">
             </tbody>
-        </table>
+        </table> {% endcomment %}
+
         </div>
     {% else %}
     <!-- End of the execution tab-->
@@ -177,13 +178,20 @@
         // PUT YOUR CUSTOM JAVASCRIPT HERE
 
         // You can access apparatus_type config like this
-        config = JSON.parse(document.getElementById('experiment-config').textContent);
+        config = JSON.parse(document.getElementById('execution-config').textContent);
         console.log(config);
-        console.log(config.protocols);
+        console.log(Object.keys(config.protocol.config.properties).length);
+
         var exp_parameters = [];
-        if (config.protocols !== null && config.protocols.length > 1) {
-            exp_parameters = config.protocols[0].exp_paremeters
-            // console.log(exp_parameters);
+        if (config.protocols !== null && Object.keys(config.protocol.config.properties).length > 1) {
+            for (let ii = 0; ii<Object.keys(config.protocol.config.properties).length;ii++ )
+            {
+                key = Object.keys(config.protocol.config.properties)[ii];
+                console.log(config.protocol.config.properties[key]);
+                exp_parameters[ii] = {"min_val": config.protocol.config.properties[key].minimum,"max_val":config.protocol.config.properties[key].maximum,"step": config.protocol.config.properties[key].multipleOf,"start": config.protocol.config.properties[key].minimum,"nome": key};
+            };
+
+            console.log(exp_parameters);
         }
 
         // If the url contains execution id at the end, the execution information will be also injected into the page
@@ -217,8 +225,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/components/tab.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables.net-se/1.11.3/dataTables.semanticui.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="{% static 'free/js/tab_.js' %}"></script>
-    <script src="{% static 'free/js/plotly_results.js' %}"></script>
+    <script src="{% static 'free/js/tab_montecarlo.js' %}"></script>
+    <script src="{% static 'free/js/montecarlo.js' %}"></script>
 
     <script>
         var selectedStream =  document.getElementById('video-config').textContent;

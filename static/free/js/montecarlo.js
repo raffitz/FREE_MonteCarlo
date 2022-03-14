@@ -88,13 +88,13 @@ function Show_data(){
 
 function queue() {
   // get inputs values from the client side
-  if ($("#DeltaX").val() !== undefined)
-    DeltaX = $("#DeltaX").val();
-  if ($("#Samples").val() !== undefined)
-    Samples = $("#Samples").val();
+  if ($("#R").val() !== undefined)
+    DeltaX = $("#R").val();
+  if ($("#Iteration").val() !== undefined)
+    Samples = $("#Iteration").val();
 
   
-  data_send = {"id":new_execution.id,"apparatus": apparatus, "protocol": protocol, "config": {"deltaX": parseInt (DeltaX), "samples":parseInt (Samples)}}
+  data_send = {"id":new_execution.id,"apparatus": apparatus, "protocol": protocol, "config": {"R": parseInt (DeltaX), "Iteration":parseInt (Samples)}}
   // '{"experiment_name": "Pendulo", "config_experiment": {"DeltaX":'+ String(DeltaX)+', "Samples":'+String(Samples)+' }}'
   HEADERS = {
     "X-CSRFToken": getCookie("csrftoken"),
@@ -122,7 +122,7 @@ function queue() {
     data: data_send,
   }).then(response => {
     console.log('plotly_results', response);
-    execution_id = response.data.id
+    execution_id = new_execution.id
   }).catch(console);
 
 
@@ -165,8 +165,6 @@ function getData(){
         console.log('ola', response.data[0].value);
         res = Object.keys(response.data[0].value);
         buildPlot1(res);
-        buildPlot2(res);  // grafico de temperatura não 
-        buildPlot3(res);
         last_result_id = response.data[0].id+1
         frist = 1;
       }
@@ -178,36 +176,17 @@ function getData(){
     }
     else{
       if (typeof response.data[0] === 'object'){
-        console.log('plotly_results', response.data.value);
-        
-        receive_error_velocity = 0.1;
-        receive_error_period = 0.0005;//response.data.value.e_period;
-        
-        Plotly.extendTraces('myplot', {x: [[response.data[0].value.Sample_number]],y: [[response.data[0].value.Val3]],
-          'error_y.array': [[ receive_error_velocity ]]}, [0]);
-        last_result_id = response.data[0].id+1
-        Plotly.extendTraces('myplot1', {x: [[response.data[0].value.Val1]]}, [0]);
-        Plotly.extendTraces('myplot2', {x: [[response.data[0].value.Sample_number]],y: [[response.data[0].value.Val1]],
-        'error_y.array': [[receive_error_period]]}, [0]);
-  
-
-      html = save_table
-      // console.log("ola",save_table) 
-      keys  = Object.keys(response.data[0].value);
-      html += "<tr>";
-      keys.forEach(function(data) 
-      {
-        // console.log("pppp ",data)
-        
-        html += "<td>" + response.data[0].value[data]  +  "</td>";
-        
-        
-      });
-      html += "</tr>";
-      save_table = html
-  // assumes <div id="result"></div>
-         document.getElementById("table_result").innerHTML = html;
-        //  console.log("coisas html table ",html);
+        let j = parseInt(response.data.value.circ,10);
+				Plotly.extendTraces('myplot', {x: [[response.data.value.eX]],y: [[response.data.value.eY]]}, [j]);
+            last_result_id = parseInt(response.data.id)+1
+				if (j === 1)
+				{
+					point_in_1 = point_in_1+1;
+					document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
+				}
+				total_point_1 = total_point_1 +1
+				document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
+				document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
       }
       // getData();
     }
@@ -317,219 +296,98 @@ var selectorOptions = {
 };
 
 
-function buildPlot1(res) {
+function buildPlot1(results) {
 
-  console.log(res);
-  var trace1 = {
-		x: [],
-		y: [],
-    error_y: {
-      type: 'data',
-      color: '#85144B',
-      array: [],
-      thickness: 1.5,
-      width:3,
-      visible: true
-    },
-    mode: 'lines+markers',
-    line: {
-      color: "#1f77b4", 
-      width: 1
-    },marker: {
-      color: "rgb(0, 255, 255)", 
-      size: 6, 
-      line: {
-        color: "black", 
-        width: 0.5
-      }
-    },
-    type:"scatter",
-		/*line: {
-		  color: '#80CAF6',
-		  shape: 'linear'
-		},*/
-		
-		name: res[1]
-	  };
-
-    var output_data = [trace1];
-
-    var layout = {
-      title: gettext('Linear velocity vs sample number'),
-      height: 500, // os valores são todos em pixels
-      font: {
-      family: 'Lato',
-      size: 16,
-      color: 'black'
-      },
-
-      xaxis: {
-            title: gettext('# Samples'),
-            titlefont:{
-                  color: 'black',
-                  size: 14
-                  },
-                 howticklabels: false
-                 // rangemode: 'tozero'
-                
-                 //rangeslider: {}
-            },
-      yaxis: {
-            title: gettext('Linear velocity [m/s]'),
-            fixedrange: true,
-            titlefont:{
-                  color: 'black',
-                  size: 14
+  var dados_f = [];
+           //color = "rgb(" + (200*Math.random()+50).toString()+',' + (200*Math.random()+20).toString()+',' +(200*Math.random()+10).toString()+')';
+           for (let i=0; i < 2; i++){
+              if (i === 1){
+                 name= "IN";
+                 color = "rgb(0, 204, 0)";
+              }
+              else{
+                 name = "OUT";
+                 color = "rgb(255, 0, 0)";
+              }
+              dados_f.push({
+                      name: name,
+                      x: [],
+                      y: [],
+                      marker: {
+                       color: color,
+                       size: 5,
+                      },
+                      line: {
+                       color: color,
+                       width: 0,
+                      },
+                      mode: 'lines+markers',
+                      type: 'scatter',
+                    });
+           }
+           var layout = {
+              title: 'Monte Carlo',
+              width: 550,
+              height: 550,
+              xaxis: {
+                 title: 'R [ua]',
+                 titlefont: {
+                   family: 'Arial, sans-serif',
+                   size: 18,
+                   color: 'black'
+                 },
+                 showticklabels: true,
+                 exponentformat: 'e',
+                 showexponent: 'all',
+                 range: [-R, R]
+              },
+              yaxis: {
+                 title: 'R [ua]',
+                 titlefont: {
+                   family: 'Arial, sans-serif',
+                   size: 18,
+                   color: 'black'
+                 },
+                 showticklabels: true,
+                   range: [-R, R]
+                 
+              },
+              shapes: [
+  
+                 // Unfilled Circle
+  
+                 {
+                   type: 'circle',
+                   xref: 'x',
+                   yref: 'y',
+                   x0: -R,
+                   y0: -R,
+                   x1: R,
+                   y1: R,
+                   line: {
+                    color: "rgb(0, 204, 0)",
+                    width: 1
+                   }
+                 },
+                 {
+                  type: 'rect',
+                  x0: -R,
+                  y0: -R,
+                  x1: R,
+                  y1: R,
+                  line: {
+                     color: 'rgba(128, 0, 128, 1)'
                   }
-                 // rangemode: 'tozero'
-            }
-     };
 
-     Plotly.newPlot('myplot', output_data, layout);
+                 }
+              ],
+              
+           };
+           console.log(dados_f);
+           Plotly.newPlot('myplot', dados_f, layout);
    
 }
 
-
-
-
-
-
-
-///////////////////
-
-function buildPlot2(res) {
-  console.log(res);
-  var trace2 = {
-    // no histograma so é x ou é y.
-		x: [],
-		//y: [],
-    name: gettext('Histogram of the pendulum periods'),
-    visible: true,
-   // mode: 'lines+markers',
-    type: 'histogram',
-    nbins: 50,
-    // xbins: {
-
-    //   end: 1000, 
-  
-    //   size: 0.06, 
-  
-    //   start: .5
-  
-    // },
-		line: {
-		  color: '#80CAF6',
-		  shape: 'linear'
-		},
-    opacity:0.5,
-		
-		name: res[2]
-	  };
-
-    var output_data = [trace2];
-
-    var layout = {
-      title: gettext('Histogram of the pendulum periods'),
-      height: 500, // os valores são todos em pixels
-      bargap: 0.05, 
-      bargroupgap: 0.2,
-     
-      font: {
-      family: 'Lato',
-      size: 16,
-      color: 'black'
-      },
-
-      xaxis: {
-            
-            title: gettext('Period [s]'),
-            titlefont:{
-                  color: 'black',
-                  size: 14
-                  }
-                //  rangemode: 'tozero'
-            },
-      yaxis: {
-        //range:[0.19,0.21],
-            title: gettext('# Samples'),
-            titlefont:{
-                  color: 'black',
-                  size: 14
-                  }
-                 // rangemode: 'tozero'
-            }
-     };
-
-     Plotly.newPlot('myplot1', output_data, layout);
-   
-}
-
-
-function buildPlot3(res) {
-  console.log(res);
-  var trace3 = {
-		x: [],
-		y: [],
-    error_y: {
-      type: 'data',
-      color: '#85144B',
-      array: [],
-      thickness: 1.5,
-      width:3,
-      visible: true
-    },
-    mode: 'lines+markers',
-    line: {
-      color: "#1f77b4", 
-      width: 1
-    },marker: {
-      color: "rgb(0, 255, 255)", 
-      size: 6, 
-      line: {
-        color: "black", 
-        width: 0.5
-      }
-    },
-    type:"scatter",
-		
-		name: res[3]
-	  };
-
-    var output_data = [trace3];
-
-    var layout = {
-      title: gettext('Period vs. number of samples'),
-      height: 500, // os valores são todos em pixels
-      font: {
-      family: 'Lato',
-      size: 16,
-      color: 'black'
-      },
-
-      xaxis: {
-            
-            title: gettext('# Samples'),
-            titlefont:{
-                  color: 'black',
-                  size: 14
-                  }
-                //  rangemode: 'tozero'
-            },
-      yaxis: {
-        //range:[0.19,0.21],
-            title: gettext('Period [s]'),
-            titlefont:{
-                  color: 'black',
-                  size: 14
-                  }
-                  //rangemode: 'tozero'
-            }
-     };
-
-     Plotly.newPlot('myplot2', output_data, layout);
-   
-    }
-    
 
 
 
