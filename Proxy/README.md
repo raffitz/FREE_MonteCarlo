@@ -7,7 +7,6 @@ Install the following:
 ```
 sudo  apt-get install git
 ```
-```
 For the Proxy it self:
 ```
 sudo apt install python3
