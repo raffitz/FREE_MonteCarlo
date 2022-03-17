@@ -75,17 +75,14 @@
     {% if final_result.id == None %}
         <div class="ui bottom attached tab segment" data-tab="execution" id="cena">
             <div class="ui two column stackable center aligned grid segment" >
-                <div class="column">
-                    <div style="width: 550px; height: 500px" id="myplot"></div>
+                    <div style="width: 550px; height: 700px" id="myplot"></div>
                     {% comment %} <select id="plotselect" onchange="findplot()" >
                             <option value="trace1">plot1</option>
                             <option value="trace2">trace2</option>
                             <option value="trace3">trace3</option>
                             <option value="All">All</option>
                     </select> {% endcomment %}
-                </div>
-                <div class="ui vertical divider"></div>
-                <div class="column">
+
                     <div style="margin-left: 20px;">
                         <div>
                             <label id="point_in">Points in : </label>
@@ -97,7 +94,7 @@
                             <label id="pi">Pi : </label>
                         </div>
                     </div>
-                </div>
+
             </div>
         {% comment %} <table id="table_result_total" class="ui celled padded table"  cellspacing="0"  style="width:100%">
             <thead>

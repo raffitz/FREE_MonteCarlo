@@ -31,6 +31,8 @@ var output_data = [];
 var receive_error_velocity = [];
 var receive_error_period = [];
 var mytable = [];
+let point_in_1 = 0
+let total_point_1 = 0
 var DeltaX = document.getElementById('DeltaX');
 var Samples = document.getElementById('Samples');
 let save_table = ""
@@ -89,12 +91,13 @@ function Show_data(){
 function queue() {
   // get inputs values from the client side
   if ($("#R").val() !== undefined)
-    DeltaX = $("#R").val();
+    R = $("#R").val();
   if ($("#Iteration").val() !== undefined)
-    Samples = $("#Iteration").val();
+    Iteration = $("#Iteration").val();
 
   
-  data_send = {"id":new_execution.id,"apparatus": apparatus, "protocol": protocol, "config": {"R": parseInt (DeltaX), "Iteration":parseInt (Samples)}}
+  data_send = {"id":new_execution.id,"apparatus": apparatus, "protocol": protocol, "config": {"R": parseInt (R), "Iteration":parseInt (Iteration)}}
+  execution_id = new_execution.id
   // '{"experiment_name": "Pendulo", "config_experiment": {"DeltaX":'+ String(DeltaX)+', "Samples":'+String(Samples)+' }}'
   HEADERS = {
     "X-CSRFToken": getCookie("csrftoken"),
@@ -122,7 +125,7 @@ function queue() {
     data: data_send,
   }).then(response => {
     console.log('plotly_results', response);
-    execution_id = new_execution.id
+    // execution_id = response.data.id
   }).catch(console);
 
 
@@ -164,29 +167,59 @@ function getData(){
       {
         console.log('ola', response.data[0].value);
         res = Object.keys(response.data[0].value);
-        buildPlot1(res);
+        buildPlot1();
         last_result_id = response.data[0].id+1
         frist = 1;
       }
     }
     console.log(response);
     // check for ending of the experiment
-    if (response.data.result_type !== 'undefined' && response.data[0].result_type === 'f'){
+    if (response.data[0].id > response.data[response.data.length-1].id)
+    {
+      check = response.data.length-1
+    }
+    else{
+      check = 0 
+    }
+    if (response.data.result_type !== 'undefined' && response.data[check].result_type === 'f'){
         myStopFunction();
     }
     else{
       if (typeof response.data[0] === 'object'){
-        let j = parseInt(response.data.value.circ,10);
-				Plotly.extendTraces('myplot', {x: [[response.data.value.eX]],y: [[response.data.value.eY]]}, [j]);
-            last_result_id = parseInt(response.data.id)+1
-				if (j === 1)
-				{
-					point_in_1 = point_in_1+1;
-					document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
-				}
-				total_point_1 = total_point_1 +1
-				document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
-				document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
+        for (let i = 0; i < response.data.length; i++)
+        { 
+          if ( response.data[i].result_type === 'p'){
+            
+            // console.log('value',response.data.map(data => data.value.eX))~
+            console.log(response.data.length)
+            console.log(response.data[i].value.eX)
+            let j = parseInt(response.data[i].value.circ,10);
+            Plotly.extendTraces('myplot', {x: [[response.data[i].value.eX]],y: [[response.data[i].value.eY]]}, [j]);
+            if (j === 1)
+            {
+              point_in_1 = point_in_1+1;
+              document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
+            }
+            total_point_1 = total_point_1 +1
+            document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
+            document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
+          }
+          else{
+            stop_signal = "f found"
+          }
+        }
+        if (response.data[0].id >response.data[response.data.length-1].id)
+        {
+          last_result_id = parseInt(response.data[0].id)+1
+        }
+        else{
+          last_result_id = parseInt(response.data[response.data.length-1].id)+1
+        }
+        if (stop_signal === "f found")
+        {
+          myStopFunction(); 
+        }
+
       }
       // getData();
     }
@@ -201,6 +234,7 @@ function getData(){
 
 function myStartFunction() {
   Results = setInterval(getData,500)
+  stop_signal = "all good"
   console.log("Valor da função");
   console.log(Results);
 }
@@ -296,7 +330,7 @@ var selectorOptions = {
 };
 
 
-function buildPlot1(results) {
+function buildPlot1() {
 
   var dados_f = [];
            //color = "rgb(" + (200*Math.random()+50).toString()+',' + (200*Math.random()+20).toString()+',' +(200*Math.random()+10).toString()+')';
