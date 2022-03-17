@@ -34,6 +34,8 @@ DEBUG = on
 ```
 
 
-after changing the SERVER and PORT to the correct ones that you are using for FREE just run the proxy by:
+after changing the SERVER and PORT to the correct ones that you are using for FREE just run the Proxy by:
 
+```
 python3 main.py
+```
