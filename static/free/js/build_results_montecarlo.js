@@ -69,6 +69,13 @@ function buildGraph(response){
 }
 
 function plotRunTime(response){
+  if (response.data[0].id > response.data[response.data.length-1].id)
+    {
+      check = response.data.length-1
+    }
+    else{
+      check = 0 
+    }
   if (typeof response.data[0] === 'object'){
     for (let i = 0; i < response.data.length; i++)
     { 
