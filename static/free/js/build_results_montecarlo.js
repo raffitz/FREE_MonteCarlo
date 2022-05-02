@@ -86,190 +86,30 @@ function Show_data(){
 }
 
 
-// This function receive as input the parameters and send them to the experiment and send back the data to browser*/
-
-function queue() {
-  // get inputs values from the client side
-  if ($("#R").val() !== undefined)
-    R = $("#R").val();
-  if ($("#Iteration").val() !== undefined)
-    Iteration = $("#Iteration").val();
-
-  
-  data_send = {"id":new_execution.id,"apparatus": apparatus, "protocol": protocol, "config": {"R": parseInt (R), "Iteration":parseInt (Iteration)}}
-  execution_id = new_execution.id
-  // '{"experiment_name": "Pendulo", "config_experiment": {"DeltaX":'+ String(DeltaX)+', "Samples":'+String(Samples)+' }}'
-  HEADERS = {
-    "X-CSRFToken": getCookie("csrftoken"),
-    }
-  var endpoint="/api/v1/execution/"+new_execution.id;
-  // print out
-  console.log('JSON : ' +  endpoint);
-  console.log('JSON : ' +  data_send);
-
-  // $.ajax({
-  //   url: endpoint,   //Your api url
-  //   type: 'POST',   //type is any HTTP method
-  //   contentType: 'application/json;charset=UTF-8',
-  //   data: JSON,
-  //   success: function (response){
-  //   console.log('PUT response in:' +response.id);
-  //   execution_id = response.id
-  //   }
-  // });
-
-  axios({
-    method: 'put', //you can set what request you want to be
-    url: endpoint,
-    headers: HEADERS,
-    data: data_send,
-  }).then(response => {
-    console.log('plotly_results', response);
-    // execution_id = response.data.id
-  }).catch(console);
-
-
-  // não quero fazer pontos no botão start!
-  // Tenho que mudar alguma coisa aqui pois ainda não faz o que realmente quero
-  // getData(); 
-  
-
-
+function cleanPlots(){
+  console.log("Clean all plots ");
+  Plotly.purge('myplot');
+  Plotly.purge('myplot1');
+  Plotly.purge('myplot2');
 }
 
-
-function myStopFunction() {
-  clearInterval(Results);
-  console.log(Results);
+function buildGraph(response){
+  buildPlot1();
+  last_result_id = response.data[0].id+1
+  return 1;
 }
 
-let last_result_id =0 
-// Receive data from experiment
-function getData(){
-  let endpoint_result =  "/api/v1/execution/"+execution_id+"/result/0";
-  if (frist === 0)
+function plotRunTime(response){
+  let j = parseInt(response.data[i].value.circ,10);
+  Plotly.extendTraces('myplot', {x: [[response.data[i].value.eX]],y: [[response.data[i].value.eY]]}, [j]);
+  if (j === 1)
   {
-    endpoint_result = "/api/v1/execution/"+execution_id+"/result/0";
+    point_in_1 = point_in_1+1;
+    document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
   }
-  else{
-    endpoint_result = "/api/v1/execution/"+execution_id+"/result/"+last_result_id
-  }
-
-  axios({
-    method: 'get', //you can set what request you want to be
-    url: endpoint_result,
-    headers: HEADERS,
-  }).then(response => {
-    console.log('plotly_results', response.data);
-    if (frist === 0)
-    {
-      if (response.data !== "")
-      {
-        console.log('ola', response.data[0].value);
-        res = Object.keys(response.data[0].value);
-        buildPlot1();
-        last_result_id = response.data[0].id+1
-        frist = 1;
-      }
-    }
-    console.log(response);
-    // check for ending of the experiment
-    if (response.data[0].id > response.data[response.data.length-1].id)
-    {
-      check = response.data.length-1
-    }
-    else{
-      check = 0 
-    }
-    if (response.data.result_type !== 'undefined' && response.data[check].result_type === 'f'){
-        myStopFunction();
-    }
-    else{
-      if (typeof response.data[0] === 'object'){
-        for (let i = 0; i < response.data.length; i++)
-        { 
-          if ( response.data[i].result_type === 'p'){
-            
-            // console.log('value',response.data.map(data => data.value.eX))~
-            console.log(response.data.length)
-            console.log(response.data[i].value.eX)
-            let j = parseInt(response.data[i].value.circ,10);
-            Plotly.extendTraces('myplot', {x: [[response.data[i].value.eX]],y: [[response.data[i].value.eY]]}, [j]);
-            if (j === 1)
-            {
-              point_in_1 = point_in_1+1;
-              document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
-            }
-            total_point_1 = total_point_1 +1
-            document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
-            document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
-          }
-          else{
-            stop_signal = "f found"
-          }
-        }
-        if (response.data[0].id >response.data[response.data.length-1].id)
-        {
-          last_result_id = parseInt(response.data[0].id)+1
-        }
-        else{
-          last_result_id = parseInt(response.data[response.data.length-1].id)+1
-        }
-        if (stop_signal === "f found")
-        {
-          myStopFunction(); 
-        }
-
-      }
-      // getData();
-    }
-   
-  }).catch(error => {
-    if (error.response !== undefined) {
-    console.error('Error : ', error.response.data);
-    }
-  });
-  
-}
-
-function myStartFunction() {
-  Results = setInterval(getData,500)
-  stop_signal = "all good"
-  console.log("Valor da função");
-  console.log(Results);
-}
-
-
-function start() {
-  var endpoint_2="/api/v1/execution/"+execution_id+"/start";
-  // print out
-  console.log('JSON : ' +  endpoint_2);
-  // console.log('JSON : ' +  JSON);
-  // data_send = {}
-  // $.ajax({
-  //   url: endpoint_2,   //Your api url
-  //   type: 'PUT',   //type is any HTTP method
-  //   contentType: 'application/json;charset=UTF-8',
-  //   data: JSON,
-  //   success: function (response){
-  //   console.log('PUT response in:' +response);
-  //   }
-  // });
-
-  axios({
-    method: 'put', //you can set what request you want to be
-    url: endpoint_2,
-    headers: HEADERS,
-  }).then(response => {
-    console.log('plotly_results', response);
-  }).catch(error => {
-    if (error.response !== undefined) {
-    console.error('Error : ', error.response.data);
-    }
-  });
-  
-  $('.menu .item').tab('change tab','execution');
-  myStartFunction();
+  total_point_1 = total_point_1 +1
+  document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
+  document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
 }
 
 
