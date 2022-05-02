@@ -116,33 +116,33 @@ function plotRunTime(response){
 
 
 
-//// nao usado
-function tablebind(response) {  
-          if (obj.length > 0) {  
+// //// nao usado
+// function tablebind(response) {  
+//           if (obj.length > 0) {  
 
-              var table = $("<table />");  
-              table[0].border = "1";  
+//               var table = $("<table />");  
+//               table[0].border = "1";  
 
-              var row$;  
+//               var row$;  
 
-              var columns = addAllColumnHeaders(["S"]);  
-              for (var i = 0; i < data.length; i++)
-               {  
-                  row$ = $('<tr/>');  
+//               var columns = addAllColumnHeaders(["S"]);  
+//               for (var i = 0; i < data.length; i++)
+//                {  
+//                   row$ = $('<tr/>');  
            
-                  for (var colIndex = 0; colIndex < columns.length; colIndex++) 
-                  {  
-                      var cellValue = data[i][columns[colIndex]];  
+//                   for (var colIndex = 0; colIndex < columns.length; colIndex++) 
+//                   {  
+//                       var cellValue = data[i][columns[colIndex]];  
 
-                      if (cellValue == null) { cellValue = ""; }  
+//                       if (cellValue == null) { cellValue = ""; }  
 
-                      row$.append($('<td/>').html(cellValue));  
-                  }  
-                  $("#jsonTable").append(row$);  
-              }      
-          }  
+//                       row$.append($('<td/>').html(cellValue));  
+//                   }  
+//                   $("#jsonTable").append(row$);  
+//               }      
+//           }  
 
-}  
+// }  
 
 
 
