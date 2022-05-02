@@ -8,7 +8,7 @@ Last updated out 9 11:12 , 2021*/
 let  total_point_1 = 0;
 let point_in_1 = 0;
 let  stop_signal = "all good"
-
+let R =0;
 
 
 function getCookie(name) 
@@ -65,11 +65,17 @@ function cleanPlots(){
   Plotly.purge('myplot');
 }
 
-function buildGraph(response,R){
+
+
+function buildGraph(response){
+  R = new_execution.config.R
   buildPlot1(R);
-  last_result_id = response.data[0].id+1
-  return 1;
+  console.log("aqui")
+  console.log(response.data[0].id)
 }
+
+
+
 
 function plotRunTime(response){
   if (response.data[0].id > response.data[response.data.length-1].id)
