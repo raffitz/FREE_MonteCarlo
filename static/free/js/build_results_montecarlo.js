@@ -5,37 +5,8 @@ Developed by José Veiga and Pedro Rosa
 Last updated out 9 11:12 , 2021*/
 
 
-// starting all the variables
-var base_url = "http://10.2.12.86:8000";
-let new_execution = JSON.parse(document.getElementById('execution-config').textContent);
-result_data = JSON.parse(document.getElementById('final-result').textContent);
-var apparatus = new_execution.apparatus;
-var protocol = new_execution.protocol.id;
-// {
-//   "apparatus": 0,
-//   "protocol": 0,
-//   "config": {}
-// }
-
-let execution_id = 0;
-let Results=0;
-var DeltaX=0;
-var Samples=0;
-var point_x;
-var point_y;
-var name = ''
-var frist=0;
-var point_x;
-var point_y;
-var output_data = [];
-var receive_error_velocity = [];
-var receive_error_period = [];
-var mytable = [];
-let point_in_1 = 0
-let total_point_1 = 0
-var DeltaX = document.getElementById('DeltaX');
-var Samples = document.getElementById('Samples');
-let save_table = ""
+let  total_point_1 = 0;
+let point_in_1 = 0;
 
 function getCookie(name) 
 {
@@ -89,8 +60,6 @@ function Show_data(){
 function cleanPlots(){
   console.log("Clean all plots ");
   Plotly.purge('myplot');
-  Plotly.purge('myplot1');
-  Plotly.purge('myplot2');
 }
 
 function buildGraph(response){
