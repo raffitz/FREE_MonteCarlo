@@ -7,7 +7,7 @@ Last updated out 9 11:12 , 2021*/
 
 let  total_point_1 = 0;
 let point_in_1 = 0;
-
+let  stop_signal = "all good"
 function getCookie(name) 
 {
   var dc = document.cookie;
@@ -69,16 +69,42 @@ function buildGraph(response){
 }
 
 function plotRunTime(response){
-  let j = parseInt(response.data[i].value.circ,10);
-  Plotly.extendTraces('myplot', {x: [[response.data[i].value.eX]],y: [[response.data[i].value.eY]]}, [j]);
-  if (j === 1)
-  {
-    point_in_1 = point_in_1+1;
-    document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
+  if (typeof response.data[0] === 'object'){
+    for (let i = 0; i < response.data.length; i++)
+    { 
+      if ( response.data[i].result_type === 'p'){
+        
+        // console.log('value',response.data.map(data => data.value.eX))~
+        console.log(response.data.length)
+        console.log(response.data[i].value.eX)
+        let j = parseInt(response.data[i].value.circ,10);
+        Plotly.extendTraces('myplot', {x: [[response.data[i].value.eX]],y: [[response.data[i].value.eY]]}, [j]);
+        if (j === 1)
+        {
+          point_in_1 = point_in_1+1;
+          document.getElementById('point_in').innerHTML = 'Points in : ' + parseInt(point_in_1,10);
+        }
+        total_point_1 = total_point_1 +1
+        document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
+        document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
+      }
+      else{
+        stop_signal = "f found"
+      }
+    }
+    if (response.data[0].id >response.data[response.data.length-1].id)
+    {
+      last_result_id = parseInt(response.data[0].id)+1
+    }
+    else{
+      last_result_id = parseInt(response.data[response.data.length-1].id)+1
+    }
+    if (stop_signal === "f found")
+    {
+      myStopFunction(); 
+    }
+
   }
-  total_point_1 = total_point_1 +1
-  document.getElementById('total_point').innerHTML = 'Total points : ' +  parseInt(total_point_1,10);
-  document.getElementById('pi').innerHTML = 'PI : ' + (4*parseFloat(point_in_1,10)/parseFloat(total_point_1,10));
 }
 
 
