@@ -8,6 +8,9 @@ Last updated out 9 11:12 , 2021*/
 let  total_point_1 = 0;
 let point_in_1 = 0;
 let  stop_signal = "all good"
+
+
+
 function getCookie(name) 
 {
   var dc = document.cookie;
@@ -62,8 +65,8 @@ function cleanPlots(){
   Plotly.purge('myplot');
 }
 
-function buildGraph(response){
-  buildPlot1();
+function buildGraph(response,R){
+  buildPlot1(R);
   last_result_id = response.data[0].id+1
   return 1;
 }
@@ -172,7 +175,7 @@ var selectorOptions = {
 };
 
 
-function buildPlot1() {
+function buildPlot1(R) {
 
   var dados_f = [];
            //color = "rgb(" + (200*Math.random()+50).toString()+',' + (200*Math.random()+20).toString()+',' +(200*Math.random()+10).toString()+')';
