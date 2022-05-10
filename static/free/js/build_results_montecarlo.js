@@ -47,29 +47,62 @@ $(".menu .item").click(function() {
 
 function Show_data(){
   result_data = JSON.parse(document.getElementById('final-result').textContent);
-  buildPlot1(0);
-  buildPlot2(0);
-  buildPlot3(0);
+  buildPlot1(JSON.parse(document.getElementById('execution-config').textContent).config.R,"resultstab-myplot");
   receive_error_velocity = 0.1;
   receive_error_period = 0.0005;//response.data.value.e_period;
-  Plotly.extendTraces('myplot', {x: [result_data.value.map(data => data.Sample_number)],y: [result_data.value.map(data => data.Val3)],'error_y.array': [Array(result_data.value.length).fill(receive_error_velocity)]}, [0]);
-  Plotly.extendTraces('myplot1', {x:  [result_data.value.map(data => data.Val1)]}, [0]);
-  Plotly.extendTraces('myplot2', {x: [result_data.value.map(data => data.Sample_number)],y: [result_data.value.map(data => data.Val1)],'error_y.array': [Array(result_data.value.length).fill(receive_error_period)]}, [0]);
+  console.log(JSON.parse(document.getElementById('execution-config').textContent).config.R)
+  let in_x_points = [result_data.value.map(data => { 
+    if (parseInt(data.circ) === 0){
+      return data.eX
+    }
+    else{
 
+    }}).filter(function (element) { 
+      return element !== undefined;
+    })]
+  let in_y_points = [result_data.value.map(data => { 
+    if (parseInt(data.circ) === 0){
+      return data.eY
+    }
+    else{
+    }}).filter(function (element) { 
+    return element !== undefined;
+    })]
+  let out_x_points = [result_data.value.map(data => { 
+    if (parseInt(data.circ) === 1){
+      return data.eX
+    }
+    else{
 
+    }}).filter(function (element) { 
+    return element !== undefined;
+    })]
+  let out_y_points = [result_data.value.map(data => { 
+    if (parseInt(data.circ) === 1){
+      return data.eY
+    }
+    else{
+    }}).filter(function (element) { 
+      return element !== undefined;
+    })]
+  // console.log(in_x_points)
+  console.log([result_data.value.map(data => parseInt(data.circ))]);
+  Plotly.extendTraces("resultstab-myplot", {x: in_x_points,y: in_y_points}, [0]);
+  Plotly.extendTraces("resultstab-myplot", {x: out_x_points,y: out_y_points}, [1]);
 }
 
 
 function cleanPlots(){
   console.log("Clean all plots ");
   Plotly.purge('myplot');
+  Plotly.purge('resultstab-myplot');
 }
 
 
 
 function buildGraph(response){
   R = new_execution.config.R
-  buildPlot1(R);
+  buildPlot1(R,"myplot");
   console.log("aqui")
   console.log(response.data[0].id)
 }
@@ -181,7 +214,7 @@ var selectorOptions = {
 };
 
 
-function buildPlot1(R) {
+function buildPlot1(R,plotdiv) {
 
   var dados_f = [];
            //color = "rgb(" + (200*Math.random()+50).toString()+',' + (200*Math.random()+20).toString()+',' +(200*Math.random()+10).toString()+')';
@@ -269,7 +302,7 @@ function buildPlot1(R) {
               
            };
            console.log(dados_f);
-           Plotly.newPlot('myplot', dados_f, layout);
+           Plotly.newPlot(plotdiv, dados_f, layout);
    
 }
 

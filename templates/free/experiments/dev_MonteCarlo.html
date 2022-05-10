@@ -30,10 +30,7 @@
                         <div class="ui input" >
                             <input type="text" id="name-of-exection"  placeholder="New Execution">
                         </div>
-                        {% if final_result.id == None %}
-                        {% else %}
-                            <div class="ui blue button" onclick="save_name()">{% trans 'Save'%}</div>
-                        {% endif %}
+                            <div class="ui blue button" style="display: none;" onclick="save_name()" id= "saveNameButton">{% trans 'Save'%}</div>
                     </div>
                 </div>
             </div>
@@ -47,13 +44,13 @@
                 <legend> <h3>{% trans 'Initial Displacement (cm)'%}</h3></legend>
                 <div class="ui segment">
                     {% if final_result.id == None %}
-                        <div class="ui labeled range "  id="range1" ></div>
+                        <div class="ui labeled range "  id="range-R" ></div>
                         <br>
                         <div class="ui input" >
                             <input  type="number" id="R" onchange="disableButton()">
                         </div>
                     {% else %}
-                        <div class="ui disabled range" id="range1"></div>
+                        <div class="ui disabled range" id="range-R"></div>
                         <br></br>
                         <div class="ui input">
                             <input  type="number" id="R" disabled>
@@ -66,16 +63,16 @@
                 <legend><h3>{% trans 'Number of Samples N'%}</h3></legend>
                 <div class="ui segment">
                     {% if final_result.id == None %}
-                        <div class="ui labeled range" id="range2" ></div>
+                        <div class="ui labeled range" id="range-Iteration" ></div>
                         <br></br>
                         <div class="ui input">
                             <input  type="number" id="Iteration" onchange="disableButton()">
                         </div>
                     {% else %}
-                        <div class="ui disabled  range" id="range2"></div>
+                        <div class="ui disabled  range" id="range-Iteration"></div>
                         <br></br>
                         <div class="ui input">
-                            <input t type="number" id="Iteration" disabled>
+                            <input type="number" id="Iteration" disabled>
                         </div>
                     {% endif %}    
                 </div>
@@ -84,17 +81,11 @@
         <div class="ui hidden divider"></div>
         <div class="row">   
             <div class="column">
-                {% if final_result.id == None %}
-                    <div class="ui blue button" onclick="queue(config_input)">
-                        {% trans 'Save'%}
-                    </div>
-                    {% comment %} <a href="execution">  {% endcomment %}
-                    <div class="ui disabled green button" onclick="start()" id="startButton">{% trans 'Submit'%}</div>
-                    {% comment %} </a> {% endcomment %}
-                    <div class="ui red button">{% trans 'Clear All'%}</div>
-                {% else %}
-
-                {% endif %}
+                <div class="ui blue button" onclick="queue(config_input)" id="saveButton">{% trans 'Save'%}</div>
+                <div class="ui disabled green button" onclick="start()" id="startButton">{% trans 'Submit'%}</div>
+                <div class="ui red button" id="clearButton" onclick="restInputValeus()">{% trans 'Clear All'%}</div>
+                <div class="ui green button" style="display: none;" id="createNew" onclick="goToCreateExecuiton()">{% trans 'Create New Execution'%}</div>
+                <div class="ui red button" style="display: none;" id="deleteButton" onclick="deleteExecution()">{% trans 'Delete'%}</div>
             </div>
         </div>   
     </div>
@@ -130,51 +121,34 @@
 {% endblock %}   
 <!-- End of the execution tab-->
 
+
+
+
 <!-- Begin of the results tab-->
 {% block resultstab %}
 
-    <div class="ui two column stackable center aligned grid segment" >
-        <div class="column">
-            <div style="width: 550px; height: 500px" id="myplot"></div>
-            {% comment %} <select id="plotselect" onchange="findplot()" >
-                    <option value="trace1">plot1</option>
-                    <option value="trace2">trace2</option>
-                    <option value="trace3">trace3</option>
-                    <option value="All">All</option>
-            </select> {% endcomment %}
+<div class="ui two column stackable center aligned grid segment" >
+    <div style="width: 550px; height: 700px" id="resultstab-myplot"></div>
+    {% comment %} <select id="plotselect" onchange="findplot()" >
+            <option value="trace1">plot1</option>
+            <option value="trace2">trace2</option>
+            <option value="trace3">trace3</option>
+            <option value="All">All</option>
+    </select> {% endcomment %}
+
+    <div style="margin-left: 20px;">
+        <div>
+            <label id="point_in">Points in : </label>
+        </div> </br>
+        <div>
+            <label id="total_point">Total points : </label>
+        </div> </br>
+        <div>
+            <label id="pi">Pi : </label>
         </div>
     </div>
-    <div class="ui two column stackable center aligned grid segment">
-        <div class="column">
-            <div style="width: 550px; height: 500px" id="myplot1"></div>
-        </div>
-        <div class="ui vertical divider"></div>
-        <div class="column">
-            <div style="width: 550px; height: 500px" id="myplot2"></div>
-        </div>
-    </div>
-    <table id="table_result_1" class="ui celled padded table"  cellspacing="0"  style="width:100%">
-        <thead>
-            <tr>
-                <th>{% trans "Sample Number" %}</th>
-                <th>{% trans "Period [s]" %}</th>
-                <th>{% trans "g [m/s^2]" %}</th>
-                <th>{% trans "Velocity [m/s]" %}</th>
-                <th>{% trans "Temperature [ºC]" %}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in final_result.value  %}
-                <tr>
-                    <td> {{ item.Sample_number}} </td>
-                    <td> {{ item.Val1}} </td>
-                    <td> {{ item.Val2}} </td>
-                    <td> {{ item.Val3}} </td>
-                    <td> {{ item.Val4}} </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+</div>
 {% endblock %}   
 		
 
@@ -208,8 +182,6 @@
 
 
 
-        //document.getElementById('apparatus-dt').innerHTML = String(config.apparatus);
-        //document.getElementById('protocol-dt').innerHTML = String(config.protocol.id);
         //if (config.name != '')
         //    document.getElementById('name-of-exection').value = config.name;
         //console.log(Object.keys(config.protocol.config.properties).length);
@@ -229,18 +201,28 @@
         execution_element = JSON.parse(document.getElementById('execution-config').textContent);
         if (execution_element.status === 'F') {
             // The execution is present
-            
+            document.getElementById("createNew").style.display = null;
+            document.getElementById("deleteButton").style.display = null;
+            document.getElementById("saveNameButton").style.display = null;
+            document.getElementById("saveButton").style.display = "none";
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("clearButton").style.display = "none";
             // console.log(execution.config)
             final_result = document.getElementById('final-result');
             finalresult = JSON.parse(final_result.textContent);
             console.log('Final Result : ', finalresult.id);
             if (final_result.id !== 'undefined') {
-                exp_parameters[0].start = execution_element.config.deltaX;
-                exp_parameters[1].start = execution_element.config.samples;
+                exp_parameters[0].start = execution_element.config.R;
+                exp_parameters[1].start = execution_element.config.Iteration;
             }
             else{
 
             }
+        }
+        else if(execution_element.status === 'C'){
+            exp_parameters[0].start = execution_element.config.R;
+            exp_parameters[1].start = execution_element.config.Iteration;
+            document.getElementById('clearButton').setAttribute('onclick','deleteExecution()');
         }
         else
         {
@@ -257,9 +239,10 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
     <script type="text/javascript" src="{% static 'free/js/janus.js' %}" ></script>
     <script type="text/javascript" src="{% static 'free/js/streaming_simple.js' %}"></script>
-    <script src="{% static 'free/js/tab_montecarlo.js' %}"></script>
     <script src="{% static 'free/js/build_results_montecarlo.js' %}"></script>
     <script src="{% static 'free/js/buttonsFREE.js' %}"></script>
+    <script src="{% static 'free/js/tab_montecarlo.js' %}"></script>
+    
 {% endblock%}
 
 
