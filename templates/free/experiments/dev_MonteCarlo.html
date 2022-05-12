@@ -116,7 +116,17 @@
             <label id="pi">Pi : </label>
         </div>
     </div>
-
+    <table id="table_result_runtime" class="ui celled table" style="width:100%">
+        <thead>
+            <tr>
+                <th>{% trans "Sample Number" %}</th>
+                <th>{% trans "x" %}</th>
+                <th>{% trans "y" %}</th>
+                <th>{% trans "In cir" %}</th>
+            </tr>
+        </thead>
+        <tbody id="table_result">  </tbody>
+    </table>
 </div>
 {% endblock %}   
 <!-- End of the execution tab-->
