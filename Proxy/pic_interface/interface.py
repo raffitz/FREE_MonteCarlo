@@ -97,14 +97,14 @@ class MonteCarlo():
     def do_config(self, config_json):
         '''Configure generator'''
         print(config_json)
-        size = config_json["config"]["R"]
-        n_points = config_json["config"]["Iteration"]
+        self.size = config_json["config"]["R"]
+        self.n_points = config_json["config"]["Iteration"]
 
         print("Size :")
-        print(size)
+        print(self.size)
         print("\n")
         print("Numbero de pontos :")
-        print(n_points)
+        print(self.n_points)
 
         return config_json, True
 
