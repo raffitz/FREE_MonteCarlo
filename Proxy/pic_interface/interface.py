@@ -1,194 +1,182 @@
 #!/usr/bin/python3
 
+'''Monte Carlo generator'''
+
 from time import sleep
-import serial
 import json
 import re
 import random
-import math 
-  
+import math
 
-serial_port = None
-size = None
-n_points = None
-frist = 1
-i = 1
-total_in = 0
-#status, config
 
-def print_serial():
-    global serial_port
+class MonteCarlo():
+    '''Monte Carlo interface'''
+    def __init__(self):
+        self.serial_port = None
+        self.size = None
+        self.n_points = None
+        self.frist = 1
+        self.i = 1
+        self.total_in = 0
+        # status, config
 
-    while True:
-        pic_message = serial_port.read_until(b'\r')
-        pic_message = pic_message.decode(encoding='ascii')
-        if len(pic_message.strip()) > 1: #Apanha os casos em que o pic manda /n/r
-            print(pic_message.strip())
+    def print_serial(self):
+        '''Print serial output'''
+        while True:
+            pic_message = self.serial_port.read_until(b'\r')
+            pic_message = pic_message.decode(encoding='ascii')
+            # Apanha os casos em que o pic manda /n/r
+            if len(pic_message.strip()) > 1:
+                print(pic_message.strip())
 
-def receive_data_from_exp():
-    global serial_port
-    global frist 
-    global i 
-    global total_in
-    if frist == 1:
-        frist =0
-        return "DATA_START"
-    if int(i) > int(n_points):
+    def receive_data_from_exp(self):
+        '''Receive experiment data'''
+        if self.frist == 1:
+            self.frist = 0
+            return "DATA_START"
+        if int(self.i) > int(self.n_points):
+            sleep(0.01)
+            print(f"Pi: {self.total_in * 1.0 / self.n_points * 1.0:lf}")
+            return "DATA_END"
         sleep(0.01)
-        print("Pi: %lf"%(float(total_in)*4/float(n_points)))
-        return "DATA_END"
-    sleep(0.01)
-    
-    x = random.uniform(-1.0,1.0)*float(size)
-    y = random.uniform(-1.0,1.0)*float(size)
-    if math.sqrt(x*x+y*y) <=int(size):
-        c_in = 1
-        total_in = total_in + 1
-    else:
-        c_in = 0
-    pic_message = '{"Sample_number":"'+str(i)+'","eX":"'+str(x)+'","eY":"'+str(y)+'","circ":"'+str(c_in)+'"}'
-    # print (i)
-    i=i+1
-    return pic_message
-    
-#ALGURES AQUI HA BUG QUANDO NAO ESTA EM NENHUMA DAS PORTAS
-def try_to_lock_experiment(config_json, serial_port):
-    #LOG_INFO
-    print("AH PROCURA DO PIC NA PORTA SERIE")
-    pic_message = serial_port.read_until(b'\r')
-    pic_message = pic_message.decode(encoding='ascii')
-    pic_message = pic_message.strip()
-    print("MENSAGEM DO PIC:\n")
-    print(pic_message)
-    print("\-------- --------/\n")
-    match = re.search(r"^(IDS)\s(?P<exp_name>[^ \t]+)\s(?P<exp_state>[^ \t]+)$",pic_message)
-    if match.group("exp_name") == config_json['id']:
-        #LOG_INFO
-        print("ENCONTREI O PIC QUE QUERIA NA PORTA SERIE")
-        if match.group("exp_state") == "STOPED":
-            return True
+
+        x_coord = random.uniform(-1.0, 1.0)*float(self.size)
+        y_coord = random.uniform(-1.0, 1.0)*float(self.size)
+        if math.sqrt(x_coord*x_coord+y_coord*y_coord) <= int(self.size):
+            c_in = 1
+            self.total_in = self.total_in + 1
         else:
-            if do_stop():
+            c_in = 0
+        pic_message = '{"Sample_number":"'+str(self.i) + \
+                      '","eX":"'+str(x_coord)+'","eY":"'+str(y_coord) + \
+                      '","circ":"'+str(c_in)+'"}'
+        # print (self.i)
+        self.i = self.i + 1
+        return pic_message
+
+    # ALGURES AQUI HA BUG QUANDO NAO ESTA EM NENHUMA DAS PORTAS
+    def try_to_lock_experiment(self, config_json):
+        '''Try to lock experiment'''
+        # LOG_INFO
+        print("AH PROCURA DO PIC NA PORTA SERIE")
+        pic_message = self.serial_port.read_until(b'\r')
+        pic_message = pic_message.decode(encoding='ascii')
+        pic_message = pic_message.strip()
+        print("MENSAGEM DO PIC:\n")
+        print(pic_message)
+        print("\\-------- --------/\n")
+        match = re.search(r"^(IDS)\s(?P<exp_name>[^ \t]+)"
+                          r"\s(?P<exp_state>[^ \t]+)$", pic_message)
+        if match.group("exp_name") == config_json['id']:
+            # LOG_INFO
+            print("ENCONTREI O PIC QUE QUERIA NA PORTA SERIE")
+            if match.group("exp_state") == "STOPED":
                 return True
-            else:
-                return False
-    else:
-        #LOG INFO
+            if self.do_stop():
+                return True
+            return False
+        # LOG INFO
         print("NAO ENCONTREI O PIC QUE QUERIA NA PORTA SERIE")
         return False
 
-#DO_INIT - Abre a ligacao com a porta serie
-#NOTAS: possivelmente os returns devem ser jsons com mensagens de erro
-#melhores, por exemplo, as portas não existem ou não está o pic em nenhuma
-#delas outra hipotese é retornar ao cliente exito ou falha
-#e escrever detalhes no log do sistema
-def do_init(config_json,dbug):
-    global serial_port
-    
-    if config_json['id'] == "DEV_TOOL":
-        print("Isto é uma função de teste!\n")
-        return True
-    else:
-        #LOG_ERROR - Serial port not configured on json.
-        #return -2
+    # DO_INIT - Abre a ligacao com a porta serie
+    # NOTAS: possivelmente os returns devem ser jsons com mensagens de erro
+    # melhores, por exemplo, as portas não existem ou não está o pic em nenhuma
+    # delas outra hipotese é retornar ao cliente exito ou falha
+    # e escrever detalhes no log do sistema
+    def do_init(self, config_json):
+        '''Initialize Monte Carlo generator'''
+        if config_json['id'] == "DEV_TOOL":
+            print("Isto é uma função de teste!\n")
+            return True
+        # LOG_ERROR - Serial port not configured on json.
+        # return -2
         print("Falta serial config!\n")
         return False
 
-def do_config(config_json) :
-    global serial_port
+    def do_config(self, config_json):
+        '''Configure generator'''
+        print(config_json)
+        size = config_json["config"]["R"]
+        n_points = config_json["config"]["Iteration"]
 
-    global size
-    global n_points
-    
+        print("Size :")
+        print(size)
+        print("\n")
+        print("Numbero de pontos :")
+        print(n_points)
 
-    print(config_json)
-    size = config_json["config"]["R"]
-    n_points = config_json["config"]["Iteration"]
+        return config_json, True
 
-    print("Size :")
-    print(size)
-    print("\n")
-    print("Numbero de pontos :")
-    print(n_points)
+    def do_start(self):
+        '''Start generator'''
+        self.total_in = 0
+        self.i = 1
+        self.frist = 1
 
+        return True
 
-    return  config_json,True
+    def do_stop(self):
+        '''Stop generator'''
+        print("A tentar parar experiencia\n")
+        cmd = "stp\r"
+        cmd = cmd.encode(encoding='ascii')
+        self.serial_port.reset_input_buffer()
+        self.serial_port.write(cmd)
+        while True:
+            pic_message = self.serial_port.read_until(b'\r')
+            print("MENSAGEM DO PIC A CONFIRMAR STPOK:\n")
+            print(pic_message.decode(encoding='ascii'))
+            print("\\-------- --------/\n")
+            if "STPOK" in pic_message.decode(encoding='ascii'):
+                return True
+            if re.search(r"(CONFIGURED|RESETED){1}$",
+                         pic_message.decode(encoding='ascii')) is not None:
+                return False
+            # Aqui não pode ter else: false senão rebenta por tudo e por nada
+            # tem de se apontar aos casos especificos -_-
 
+    def do_reset(self):
+        '''Reset generator'''
+        print("A tentar fazer reset da experiencia\n")
+        cmd = "rst\r"
+        cmd = cmd.encode(encoding='ascii')
+        self.serial_port.reset_input_buffer()
+        self.serial_port.write(cmd)
+        while True:
+            pic_message = self.serial_port.read_until(b'\r')
+            print("MENSAGEM DO PIC A CONFIRMAR RSTOK:\n")
+            print(pic_message.decode(encoding='ascii'))
+            print("\\-------- --------/\n")
+            if "RSTOK" in pic_message.decode(encoding='ascii'):
+                return True
+            if re.search(r"(STOPED|CONFIGURED){1}$",
+                         pic_message.decode(encoding='ascii')) is not None:
+                return False
+            # Aqui não pode ter else: false senão rebenta por tudo e por nada
+            # tem de se apontar aos casos especificos -_-
 
-def do_start() :
-    global serial_port
-    global frist
-    global i
-    global total_in
-    total_in = 0 
-    i = 1
-    frist = 1
-
-    return True
-
-def do_stop() :
-    global serial_port
-
-    print("A tentar parar experiencia\n")
-    cmd = "stp\r"
-    cmd = cmd.encode(encoding='ascii')
-    serial_port.reset_input_buffer()
-    serial_port.write(cmd)
-    while True :
-        pic_message = serial_port.read_until(b'\r')
-        print("MENSAGEM DO PIC A CONFIRMAR STPOK:\n")
-        print(pic_message.decode(encoding='ascii'))
-        print("\-------- --------/\n")
-        if "STPOK" in pic_message.decode(encoding='ascii') :
-            return True
-        elif re.search(r"(CONFIGURED|RESETED){1}$",pic_message.decode(encoding='ascii')) != None :
-            return False
-        #Aqui não pode ter else: false senão rebenta por tudo e por nada
-        #tem de se apontar aos casos especificos -_-
-        
-    
-
-def do_reset() :
-    global serial_port
-
-    print("A tentar fazer reset da experiencia\n")
-    cmd = "rst\r"
-    cmd = cmd.encode(encoding='ascii')
-    serial_port.reset_input_buffer()
-    serial_port.write(cmd)
-    while True :
-        pic_message = serial_port.read_until(b'\r')
-        print("MENSAGEM DO PIC A CONFIRMAR RSTOK:\n")
-        print(pic_message.decode(encoding='ascii'))
-        print("\-------- --------/\n")
-        if "RSTOK" in pic_message.decode(encoding='ascii') :
-            return True
-        elif re.search(r"(STOPED|CONFIGURED){1}$",pic_message.decode(encoding='ascii')) != None :
-            return False
-        #Aqui não pode ter else: false senão rebenta por tudo e por nada
-        #tem de se apontar aos casos especificos -_-
-
-#get_status placeholder
-def get_status():
-    global serial_port
-
-    print("Esta funcao ainda nao faz nada\n")
-    return True
-
+    # get_status placeholder
+    def get_status(self):
+        '''Get generator status'''
+        print("Esta funcao ainda nao faz nada\n")
+        return True
 
 
 if __name__ == "__main__":
     import sys
     import threading
-    
-    fp = open("./exp_config.json","r")
-    config_json = json.load(fp)
-    #config_json = json.loads('{}')
-    if not do_init(config_json):
-        sys.exit("Não deu para abrir a porta. F")
-    printer_thread = threading.Thread(target=print_serial)
-    printer_thread.start()
-    while True:
-        cmd = input()+"\r"
-        cmd = cmd.encode(encoding='ascii')
-        serial_port.write(cmd)
+
+    with open("./exp_config.json", "r", encoding='utf8') as fp:
+        experiment_config_json = json.load(fp)
+        # experiment_config_json = json.loads('{}')
+
+        experiment = MonteCarlo()
+        if not experiment.do_init(experiment_config_json):
+            sys.exit("Não deu para abrir a porta. F")
+        printer_thread = threading.Thread(target=experiment.print_serial)
+        printer_thread.start()
+        while True:
+            experimen_cmd = input()+"\r"
+            experimen_cmd = experimen_cmd.encode(encoding='ascii')
+            experiment.serial_port.write(experimen_cmd)
