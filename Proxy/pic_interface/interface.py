@@ -36,7 +36,7 @@ class MonteCarlo():
             return "DATA_START"
         if int(self.i) > int(self.n_points):
             sleep(0.01)
-            print(f"Pi: {self.total_in * 1.0 / self.n_points * 1.0:lf}")
+            print(f"Pi: {self.total_in * 1.0 / self.n_points * 1.0}")
             return "DATA_END"
         sleep(0.01)
 
