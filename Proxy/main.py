@@ -213,7 +213,7 @@ class ServerConnecion():
         e-lab-FREE server'''
         print("[Starting] Experiment Client Starting...")
         # global next_execution
-        self.interface = importlib.import_module("pic_interface.INTERFACE")\
+        self.interface = importlib.import_module("pic_interface.interface")\
             .MonteCarlo()
         while True:
             try:
